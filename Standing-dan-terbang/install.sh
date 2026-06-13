@@ -131,6 +131,12 @@ retry 2 python -m pip install --upgrade --no-cache-dir bugscan-x \
   && ok "BugScanX terpasang (jalankan: bugscanx / bx)" \
   || { warn "BugScanX gagal dipasang"; note_fail "BugScanX (pip install bugscan-x)"; }
 
+# Patch subfinder mode File: ciutkan ke domain induk -> cari subdomain ulang
+if command -v bugscanx >/dev/null 2>&1 && [ -f "$TOOLKIT_DIR/tools/patch_bugscanx.py" ]; then
+  step "Menerapkan patch BugScanX subfinder (mode File)"
+  python "$TOOLKIT_DIR/tools/patch_bugscanx.py" --patch || warn "Patch subfinder dilewati"
+fi
+
 # --- 6. ApkPatcher --------------------------------------------------
 step "Memasang ApkPatcher"
 retry 2 python -m pip install --force-reinstall --no-cache-dir \

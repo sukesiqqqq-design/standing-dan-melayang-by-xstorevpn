@@ -97,8 +97,25 @@ menu() {
 #  Aksi tiap menu
 # ---------------------------------------------------------------------
 run_bugscanx() {
-  command -v bugscanx >/dev/null 2>&1 && bugscanx \
-    || echo -e "${R}BugScanX belum terpasang. Pasang: pip install bugscan-x${N}"
+  if ! command -v bugscanx >/dev/null 2>&1; then
+    echo -e "${R}BugScanX belum terpasang. Pasang: pip install bugscan-x${N}"; pause; return
+  fi
+  header
+  echo -e "${B}BugScanX${N}"
+  echo -e "  ${C}1)${N} Jalankan BugScanX"
+  echo -e "  ${C}2)${N} Status patch subfinder (mode File)"
+  echo -e "  ${C}3)${N} Aktifkan patch subfinder (file -> root domain -> cari subdomain ulang)"
+  echo -e "  ${C}4)${N} Nonaktifkan patch (kembali ke perilaku asli)"
+  echo -e "  ${C}0)${N} Batal"
+  read -rp "$(echo -e "${Y}Pilih:${N} ")" b
+  local PATCH="$TOOLKIT_DIR/tools/patch_bugscanx.py"
+  case "$b" in
+    1) bugscanx ;;
+    2) [ -f "$PATCH" ] && python "$PATCH" --status || echo -e "${R}patch_bugscanx.py tidak ada.${N}" ;;
+    3) [ -f "$PATCH" ] && python "$PATCH" --patch  || echo -e "${R}patch_bugscanx.py tidak ada.${N}" ;;
+    4) [ -f "$PATCH" ] && python "$PATCH" --revert || echo -e "${R}patch_bugscanx.py tidak ada.${N}" ;;
+    *) return ;;
+  esac
   pause
 }
 

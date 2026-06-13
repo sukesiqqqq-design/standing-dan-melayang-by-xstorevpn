@@ -13,6 +13,11 @@ step "Update repo toolkit (git pull)"
 step "Update BugScanX"
 pip install --upgrade bugscan-x
 
+step "Terapkan ulang patch BugScanX subfinder (mode File)"
+if command -v bugscanx >/dev/null 2>&1 && [ -f "$TOOLKIT_DIR/tools/patch_bugscanx.py" ]; then
+  python "$TOOLKIT_DIR/tools/patch_bugscanx.py" --patch || echo -e "${Y}[!] Patch subfinder dilewati.${N}"
+fi
+
 step "Update ApkPatcher"
 pip install --force-reinstall https://github.com/TechnoIndian/ApkPatcher/archive/refs/heads/main.zip
 

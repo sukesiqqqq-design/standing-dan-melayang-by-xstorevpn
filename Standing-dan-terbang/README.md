@@ -90,6 +90,29 @@ Daftar menu:
 
 ---
 
+## 🔁 Patch BugScanX Subfinder (mode File)
+
+Toolkit ini menambahkan **patch otomatis** untuk fitur **Subdomain Finder** di BugScanX, **khusus input "File"**.
+
+| | Perilaku |
+|---|---|
+| **Sebelum patch** | Tiap baris di file diperlakukan sebagai domain apa adanya, lalu dicari subdomain-nya. Kalau isi file sudah berupa subdomain (mis. `api.xl.co.id`, `cdn.xl.co.id`), hasilnya sering kosong karena mencari *sub-sub-domain*. |
+| **Sesudah patch** | Semua entri **diciutkan ke domain induk (root) yang unik** (mis. `api.xl.co.id` → `xl.co.id`), lalu subdomain **dicari ulang** dari root tersebut → menemukan lebih banyak subdomain. |
+
+- Hanya cabang **File** yang diubah. Mode **Manual** tetap seperti aslinya.
+- Mengerti TLD bertingkat (mis. `co.id`, `co.uk`, `com.br`, `ac.id`), membersihkan `http://`, path, port, dan `user:pass@`, serta melewati entri berupa IP.
+- Patch **idempotent** dan **otomatis dipasang ulang** oleh `install.sh` / `update.sh` (karena BugScanX paket pip yang ketimpa saat update).
+
+Kelola lewat menu: `stt` → **1) BugScanX** → pilih *status / aktifkan / nonaktifkan patch*.
+Atau manual:
+```bash
+python ~/standing-dan-melayang-by-xstorevpn/Standing-dan-terbang/tools/patch_bugscanx.py --status   # cek
+python ~/standing-dan-melayang-by-xstorevpn/Standing-dan-terbang/tools/patch_bugscanx.py --patch    # aktifkan
+python ~/standing-dan-melayang-by-xstorevpn/Standing-dan-terbang/tools/patch_bugscanx.py --revert   # kembalikan asli
+```
+
+---
+
 ## ⭐ Smart Scan — analisis lengkap sekali jalan
 
 Cukup satu perintah, semua tahap otomatis berurutan:
