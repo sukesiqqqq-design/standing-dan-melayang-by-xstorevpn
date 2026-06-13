@@ -24,11 +24,16 @@ Kumpulan tool **analisis jaringan, host/SNI, dan APK** dalam satu paket — dibu
 ## 🚀 Instalasi (Termux)
 
 ```bash
-# 1. Clone repo ini
-git clone https://github.com/sukesiqqqq-design/Standing-dan-terbang
-cd Standing-dan-terbang
+# 0. Pasang git dulu (sekali saja, kalau belum ada)
+pkg update -y && pkg install git -y
 
-# 2. Jalankan installer (otomatis pasang semua)
+# 1. Clone repo ini
+git clone https://github.com/sukesiqqqq-design/standing-dan-melayang-by-xstorevpn
+
+# 2. Masuk ke folder script (ada di dalam subfolder)
+cd standing-dan-melayang-by-xstorevpn/Standing-dan-terbang
+
+# 3. Jalankan installer (otomatis pasang semua)
 bash install.sh
 ```
 
