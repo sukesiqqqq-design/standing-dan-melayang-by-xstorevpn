@@ -23,16 +23,37 @@ Kumpulan tool **analisis jaringan, host/SNI, dan APK** dalam satu paket — dibu
 
 ## 🚀 Instalasi (Termux)
 
-```bash
-# 1. Clone repo ini
-git clone https://github.com/sukesiqqqq-design/Standing-dan-terbang
-cd Standing-dan-terbang
+> Toolkit ini **hanya berjalan di Termux (Android)**. Pasang Termux dari **[F-Droid](https://f-droid.org/packages/com.termux/)** (versi Play Store sudah usang & sering error).
 
-# 2. Jalankan installer (otomatis pasang semua)
+### ⭐ Cara TERMUDAH — 1 baris (untuk Termux yang baru install)
+
+Salin–tempel **satu baris** ini di Termux baru. Otomatis pasang git, clone repo, lalu jalankan installer:
+
+```bash
+pkg install -y curl && bash <(curl -fsSL https://raw.githubusercontent.com/sukesiqqqq-design/standing-dan-melayang-by-xstorevpn/main/Standing-dan-terbang/setup.sh)
+```
+
+### 🔧 Cara manual (kalau ingin langkah per langkah)
+
+```bash
+# 1. Update & pasang git dulu (Termux baru BELUM punya git)
+pkg update -y && pkg install -y git
+
+# 2. Clone repo ini
+git clone https://github.com/sukesiqqqq-design/standing-dan-melayang-by-xstorevpn
+
+# 3. Masuk ke folder toolkit (ada di dalam subfolder)
+cd standing-dan-melayang-by-xstorevpn/Standing-dan-terbang
+
+# 4. Jalankan installer (otomatis pasang semua)
 bash install.sh
 ```
 
-Installer memasang: `python`, `git`, `curl`, `wget`, `unzip`, `binutils`, `dnsutils`, `openssl-tool`, `openjdk-17`, `apktool`, **BugScanX**, **ApkPatcher**, serta meng-_install_ perintah `domainfinder`, `cdncheck`, `snicheck`, `smartscan`, dan menu `stt`.
+> 💡 **Kenapa error "git is not installed"?** Termux yang baru di-install **belum punya `git`**, jadi perintah `git clone` langsung gagal dan folder tidak pernah dibuat. Selalu jalankan `pkg install -y git` **lebih dulu**, atau pakai cara 1-baris di atas yang sudah mengurus ini otomatis.
+
+Installer memasang: `python`, `git`, `curl`, `wget`, `unzip`, `clang`, `rust`, `make`, `binutils`, `libffi`, `dnsutils`, `openssl-tool`, `openjdk-17`, `termux-api`, `apktool`, **BugScanX**, **ApkPatcher**, serta meng-_install_ perintah `domainfinder`, `cdncheck`, `snicheck`, `smartscan`, dan menu `stt`.
+
+Installer kini **tahan banting**: kalau ada paket yang gagal (mis. koneksi putus), installer tetap lanjut dan menampilkan **ringkasan komponen yang gagal** di akhir — cukup jalankan `bash install.sh` sekali lagi untuk melengkapinya.
 
 ---
 
@@ -116,19 +137,21 @@ bugscanx
 ## 📁 Struktur repo
 
 ```
-Standing-dan-terbang/
-├── install.sh            # installer otomatis
-├── update.sh             # update semua tool
-├── uninstall.sh          # hapus toolkit (folder hasil tetap aman)
-├── menu.sh               # menu launcher (perintah: stt)
-├── tools/
-│   ├── domainfinder.sh   # ekstrak domain/host dari APK
-│   ├── cdncheck.sh       # deteksi Cloudflare / CloudFront
-│   ├── snicheck.sh       # inspeksi TLS/SNI & sertifikat
-│   └── smartscan.sh      # orchestrator analisis lengkap
-├── wordlists/
-│   └── subdomains.txt    # ~200 subdomain umum untuk enumerasi
-└── README.md
+standing-dan-melayang-by-xstorevpn/
+└── Standing-dan-terbang/
+    ├── setup.sh              # bootstrap 1-baris (pasang git + clone + install)
+    ├── install.sh            # installer otomatis (tahan banting)
+    ├── update.sh             # update semua tool
+    ├── uninstall.sh          # hapus toolkit (folder hasil tetap aman)
+    ├── menu.sh               # menu launcher (perintah: stt)
+    ├── tools/
+    │   ├── domainfinder.sh   # ekstrak domain/host dari APK
+    │   ├── cdncheck.sh       # deteksi Cloudflare / CloudFront
+    │   ├── snicheck.sh       # inspeksi TLS/SNI & sertifikat
+    │   └── smartscan.sh      # orchestrator analisis lengkap
+    ├── wordlists/
+    │   └── subdomains.txt    # ~200 subdomain umum untuk enumerasi
+    └── README.md
 ```
 
 ---
@@ -159,6 +182,17 @@ Mod & penyesuaian menu: **xstorevpn**.
 ---
 
 ## 🛠️ Troubleshooting
+
+**`The program git is not installed` / `cd: No such file or directory` saat memulai**
+Ini terjadi di **Termux yang baru di-install** karena `git` belum ada, sehingga `git clone` gagal dan folder tidak pernah dibuat (lalu `cd` & `bash install.sh` ikut gagal). Solusi:
+- Pasang git dulu: `pkg update -y && pkg install -y git`, lalu clone & install ulang, **atau**
+- Pakai cara **1-baris** di bagian Instalasi (paling aman untuk pemula).
+
+**`Standing-dan-terbang: No such file or directory` saat `cd`**
+Nama folder hasil clone adalah `standing-dan-melayang-by-xstorevpn`, dan toolkit ada di **subfolder** `Standing-dan-terbang`. Jadi perintah yang benar:
+```bash
+cd standing-dan-melayang-by-xstorevpn/Standing-dan-terbang
+```
 
 **`[Process completed (signal 9)]` saat scan banyak domain**
 Itu artinya Android membunuh proses (biasanya karena scan lama / aplikasi pindah ke background / layar mati). Solusi:
