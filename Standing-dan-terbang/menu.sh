@@ -110,7 +110,9 @@ run_bugscanx() {
   read -rp "$(echo -e "${Y}Pilih:${N} ")" b
   local PATCH="$TOOLKIT_DIR/tools/patch_bugscanx.py"
   case "$b" in
-    1) bugscanx ;;
+    1) # pastikan patch aktif dulu (idempotent), baru jalankan
+       [ -f "$PATCH" ] && python "$PATCH" --patch >/dev/null 2>&1
+       bugscanx ;;
     2) [ -f "$PATCH" ] && python "$PATCH" --status || echo -e "${R}patch_bugscanx.py tidak ada.${N}" ;;
     3) [ -f "$PATCH" ] && python "$PATCH" --patch  || echo -e "${R}patch_bugscanx.py tidak ada.${N}" ;;
     4) [ -f "$PATCH" ] && python "$PATCH" --revert || echo -e "${R}patch_bugscanx.py tidak ada.${N}" ;;
