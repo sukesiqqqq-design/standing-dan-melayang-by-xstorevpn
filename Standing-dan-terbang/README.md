@@ -218,11 +218,12 @@ cd standing-dan-melayang-by-xstorevpn/Standing-dan-terbang
 ```
 
 **`[Process completed (signal 9)]` saat scan banyak domain**
-Itu artinya Android membunuh proses (biasanya karena scan lama / aplikasi pindah ke background / layar mati). Solusi:
-- Toolkit kini otomatis memasang `termux-wake-lock` selama scan. Pastikan **layar HP tetap menyala** dan **jangan pindah aplikasi** saat scan besar berjalan.
-- **Resume otomatis:** kalau tetap terbunuh, **cukup jalankan lagi perintah yang sama** — `cdncheck` akan melanjutkan dari domain yang belum discan (tidak mengulang dari awal). Untuk mengulang dari nol: `cdncheck domains.txt 8 fresh`.
-- Kurangi jumlah paralel bila HP lemah, mis. `cdncheck domains.txt 4`.
-- Hasil ditulis **bertahap**, jadi file `*_cloudflare.txt` / `*_origin.txt` / `*_cdn_tls.txt` selalu berisi sebagian hasil walau terputus.
+Itu artinya Android membunuh proses (umumnya **kehabisan RAM/OOM**, atau aplikasi pindah ke background / layar mati). Solusi:
+- **Auto-resume tahan-OOM (baru):** `cdncheck` kini memakai arsitektur **supervisor + worker**. Bagian berat (worker) boleh saja dibunuh Android, tapi "supervisor" yang ringan **otomatis melanjutkan** scan dari domain yang belum selesai — sampai tuntas, **tanpa perlu menjalankan ulang manual**.
+- Toolkit juga memasang `termux-wake-lock` selama scan. Untuk daftar sangat besar, sebaiknya **layar HP tetap menyala**.
+- **Kurangi paralel** bila HP lemah/RAM kecil: `cdncheck domains.txt 3` (default sekarang `5`, sebelumnya `8`).
+- Hasil ditulis **bertahap**, jadi `*_cloudflare.txt` / `*_origin.txt` / `*_cdn_tls.txt` selalu berisi hasil parsial walau terputus. Untuk mengulang dari nol: `cdncheck domains.txt 5 fresh`.
+- Kalau ingin menjalankan manual lagi (mis. supervisor ikut terbunuh), cukup ulangi perintah yang sama — tetap melanjutkan (resume).
 
 **Kolom TLS kosong (`TLS=-`) padahal 443 open**
 Wajar untuk sebagian host (menolak HEAD / handshake lambat). Gunakan `snicheck <host>` untuk inspeksi detail.
