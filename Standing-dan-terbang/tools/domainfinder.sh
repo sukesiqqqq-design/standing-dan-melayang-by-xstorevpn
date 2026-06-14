@@ -1,18 +1,25 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # =====================================================================
-#  domainfinder v2 - Cari domain & host/SNI dari APK/APKS/XAPK/APKM
+#  domainfinder v3 - Cari domain & host/SNI dari APK/APKS/XAPK/APKM
+#  ---  mod by xstorevpn  ---
 # ---------------------------------------------------------------------
-#  - Input .apks/.xapk/.apkm  -> merge dulu jadi .apk (ApkPatcher -m)
-#  - Tiap APK diproses di folder TERPISAH (anti-tercampur)
-#  - Menangkap: domain dari URL  +  host/SNI tanpa prefix http
-#  - Filter pintar untuk membuang nama package Java (com.xxx, dll)
-#  - Output: <nama>_domains.txt (domain/host) & <nama>_urls.txt (URL lengkap)
+#  Ekstraksi LEBIH DALAM untuk menjaring domain sebanyak mungkin:
+#    1) unzip APK mentah          -> grep semua file
+#    2) apktool decode resource   -> AndroidManifest, network_security_config,
+#                                    res/values (strings.xml), assets (domain
+#                                    yang tersembunyi di resource biner arsc)
+#    3) strings pada file biner   -> classes*.dex, *.so, resources.arsc
+#                                    (menangkap domain yang di-embed di kode)
+#  + daftar TLD diperluas (ccTLD + gTLD populer) -> lebih banyak host kena.
+#
+#  Output: <nama>_domains.txt (domain/host) & <nama>_urls.txt (URL lengkap)
+#  Hasil juga disalin ke:  /sdcard/sttxstore/
 #
 #  Pemakaian:
 #     domainfinder <file.apk | file.apks | file.xapk | file.apkm>
 # =====================================================================
 
-G="\033[1;32m"; Y="\033[1;33m"; R="\033[1;31m"; C="\033[1;36m"; N="\033[0m"
+G="\033[1;32m"; Y="\033[1;33m"; R="\033[1;31m"; C="\033[1;36m"; B="\033[1;34m"; N="\033[0m"
 
 # --- 1. Cek argumen ---
 if [ -z "$1" ]; then
@@ -26,7 +33,10 @@ INPUT="$1"
 BASENAME="$(basename "$INPUT")"
 NAME="${BASENAME%.*}"
 EXT="$(echo "${BASENAME##*.}" | tr 'A-Z' 'a-z')"
-OUTDIR="$HOME/domainfinder"; WORKDIR="$OUTDIR/$NAME"; EXTRACT="$WORKDIR/extracted"
+OUTDIR="$HOME/domainfinder"; WORKDIR="$OUTDIR/$NAME"
+EXTRACT="$WORKDIR/extracted"; DECODED="$WORKDIR/decoded"
+SDCARD_OUT="/sdcard/sttxstore"
+mkdir -p "$SDCARD_OUT" 2>/dev/null
 
 # --- 3. Bersihkan folder lama (anti-tercampur) ---
 rm -rf "$WORKDIR"; mkdir -p "$EXTRACT"
@@ -44,34 +54,69 @@ case "$EXT" in
   *) echo -e "${R}[!] Format tidak didukung: .$EXT${N} (hanya apk/apks/xapk/apkm)"; exit 1 ;;
 esac
 
-# --- 5. Ekstrak APK ---
-echo -e "${C}[*] Mengekstrak APK...${N}"
+# --- 5a. Ekstrak APK (unzip mentah) ---
+echo -e "${C}[*] Mengekstrak APK (unzip)...${N}"
 unzip -o -q "$APK" -d "$EXTRACT"
+
+# --- 5b. Decode resource via apktool (lebih dalam, tanpa smali biar cepat) ---
+if command -v apktool >/dev/null 2>&1; then
+  echo -e "${C}[*] Decode resource via apktool (network_security_config, strings.xml, arsc)...${N}"
+  if timeout 360 apktool d -s -f -o "$DECODED" "$APK" >/dev/null 2>&1; then
+    echo -e "${G}[+] apktool decode selesai${N}"
+  else
+    echo -e "${Y}[!] apktool dilewati (gagal/timeout) - lanjut pakai sumber lain${N}"
+  fi
+else
+  echo -e "${Y}[!] apktool tidak ada - lewati decode resource (pasang: bash install.sh)${N}"
+fi
 
 URLS="$OUTDIR/${NAME}_urls.txt"
 DOMAINS="$OUTDIR/${NAME}_domains.txt"
+RAW="$WORKDIR/_raw_hosts.txt"
+: > "$URLS"; : > "$RAW"
 
-# --- 6a. Kumpulkan URL lengkap (dengan path) ---
-echo -e "${C}[*] Mengumpulkan URL lengkap...${N}"
-grep -raohE 'https?://[a-zA-Z0-9._~:/?#@!&=+,;%-]+' "$EXTRACT" 2>/dev/null | sort -u > "$URLS"
+# Folder yang akan di-scan
+SCAN_DIRS=("$EXTRACT")
+[ -d "$DECODED" ] && SCAN_DIRS+=("$DECODED")
 
-# --- 6b. Kumpulkan domain (dari URL) + host/SNI (tanpa prefix http) ---
-echo -e "${C}[*] Mengumpulkan domain + host/SNI (filter ketat)...${N}"
-{
-  # Domain yang muncul sebagai URL (http/https/ws/wss) -> paling pasti endpoint
-  grep -raohE '(https?|wss?)://[a-zA-Z0-9.-]+' "$EXTRACT" 2>/dev/null | sed -E 's#^[a-z]+://##'
+# Regex
+URL_RE='https?://[a-zA-Z0-9._~:/?#@!&=+,;%-]+'
+SCHEME_HOST_RE='(https?|wss?|ftp)://[a-zA-Z0-9.-]+'
+HOST_RE='\b([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}\b'
 
-  # Host/SNI polos tanpa http:// -> HANYA huruf kecil (hostname asli selalu lowercase;
-  # nama kelas kode pakai CamelCase spt AJAX.NET / BlockNote.Net jadi otomatis terbuang)
-  grep -raohE '\b([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}\b' "$EXTRACT" 2>/dev/null
-} \
-  | grep -E '^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$' \
-  | grep -E '\.(com|net|org|io|id|co|app|info|biz|tv|me|cloud|dev|xyz|asia|site|online|gov|edu|mobi|pro|in|us|uk|sg|my|jp|nl|de|tech|store|shop|live|ai|gg)$' \
-  | grep -vE '^(com|org|net|io|java|javax|kotlin|kotlinx|android|androidx|dalvik|sun|jdk|junit|okhttp3|okio|retrofit2|rx|reactivex|gms|google|firebase|crashlytics|annotation|internal|graphics|widget|util|layout|material|drawable|databinding|coroutines)\.' \
-  | grep -vE '\.(internal|preferences|prototype|bytelength|tenant|databinding|companion|impl|buildconfig|config|serializer|advertising|installation)\.' \
+# --- 6a. Kumpulkan dari file hasil unzip + decode ---
+echo -e "${C}[*] Mengumpulkan URL + domain/host (unzip + apktool)...${N}"
+for d in "${SCAN_DIRS[@]}"; do
+  grep -raohE "$URL_RE"         "$d" 2>/dev/null >> "$URLS"
+  grep -raohE "$SCHEME_HOST_RE" "$d" 2>/dev/null | sed -E 's#^[a-z]+://##' >> "$RAW"
+  grep -raohE "$HOST_RE"        "$d" 2>/dev/null >> "$RAW"
+done
+
+# --- 6b. strings pada file biner (dex/so/arsc) -> domain yang di-embed di kode ---
+if command -v strings >/dev/null 2>&1; then
+  echo -e "${C}[*] Menambang string dari biner (classes.dex, .so, resources.arsc)...${N}"
+  STRTMP="$WORKDIR/_strings.txt"; : > "$STRTMP"
+  find "${SCAN_DIRS[@]}" -type f \( -name '*.dex' -o -name '*.so' -o -name '*.arsc' \) 2>/dev/null \
+    | while IFS= read -r f; do strings -n 6 "$f" 2>/dev/null; done >> "$STRTMP"
+  grep -aohE "$URL_RE"         "$STRTMP" 2>/dev/null >> "$URLS"
+  grep -aohE "$SCHEME_HOST_RE" "$STRTMP" 2>/dev/null | sed -E 's#^[a-z]+://##' >> "$RAW"
+  grep -aohE "$HOST_RE"        "$STRTMP" 2>/dev/null >> "$RAW"
+fi
+
+# --- 6c. Filter pintar -> domain valid, buang nama package Java ---
+echo -e "${C}[*] Memfilter (buang nama package, simpan domain asli)...${N}"
+# Daftar TLD diperluas: gTLD umum + banyak ccTLD (terutama Asia/ID).
+TLD='com|net|org|io|id|co|app|info|biz|tv|me|cloud|dev|xyz|asia|site|online|gov|edu|mobi|pro|tech|store|shop|live|ai|gg|space|website|host|link|click|fun|icu|vip|top|world|news|media|stream|in|us|uk|sg|my|jp|nl|de|fr|it|es|ca|au|eu|cc|to|ws|fm|sh|st|im|ovh|kr|th|vn|ph|hk|tw|pk|bd|np|kh|la|mm|tr|za|ng|ke|ae|sa|ir|ua|pl|cz|ro|gr|pt|se|no|fi|dk|ch|at|be|hu|sk|ru|br|cn|mx|ar|cl|pe'
+
+LC_ALL=C tr 'A-Z' 'a-z' < "$RAW" \
+  | sed -E 's/[.]+$//; s/^[.]+//' \
+  | grep -E "^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+($TLD)\$" \
+  | grep -vE '^(com|org|net|io|java|javax|kotlin|kotlinx|android|androidx|dalvik|sun|jdk|junit|okhttp3|okio|retrofit2|rx|reactivex|gms|google|firebase|crashlytics|annotation|internal|graphics|widget|util|layout|material|drawable|databinding|coroutines|dagger|hilt|aspectj|objectweb|xmlpull|fasterxml|bytebuddy|jetbrains|intellij|squareup|bumptech)\.' \
+  | grep -vE '\.(internal|preferences|prototype|bytelength|tenant|databinding|companion|impl|buildconfig|config|serializer|advertising|installation|provider|receiver|service|activity|fragment|adapter|viewmodel|listener|callback|exception|factory|builder|manager|helper|module|component)$' \
   | sort -u > "$DOMAINS"
 
 COUNT="$(wc -l < "$DOMAINS" | tr -d ' ')"
+sort -u -o "$URLS" "$URLS"
 UCOUNT="$(wc -l < "$URLS" | tr -d ' ')"
 
 # --- 7. Tampilkan & salin hasil ---
@@ -83,5 +128,8 @@ echo -e "  URL lengkap      : ${C}$UCOUNT${N}"
 echo -e "${G}==================================================${N}"
 cat "$DOMAINS"
 
-cp "$DOMAINS" "$URLS" /sdcard/Download/ 2>/dev/null \
-  && echo -e "\n${C}[*] Hasil disalin juga ke /sdcard/Download/ (${NAME}_domains.txt & ${NAME}_urls.txt)${N}"
+if cp "$DOMAINS" "$URLS" "$SDCARD_OUT/" 2>/dev/null; then
+  echo -e "\n${C}[*] Hasil disalin ke ${SDCARD_OUT}/ (${NAME}_domains.txt & ${NAME}_urls.txt)${N}"
+else
+  echo -e "\n${Y}[!] Tidak bisa menyalin ke ${SDCARD_OUT}/ (jalankan: termux-setup-storage)${N}"
+fi

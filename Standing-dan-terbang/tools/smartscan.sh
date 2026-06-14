@@ -109,5 +109,6 @@ echo -e " ${B}File domain terpisah:${N}"
 [ -f "${DOMAINS%.txt}_cloudfront.txt" ] && echo -e "   - CloudFront : ${C}${DOMAINS%.txt}_cloudfront.txt${N}"
 [ -f "${DOMAINS%.txt}_origin.txt" ]     && echo -e "   - Origin     : ${C}${DOMAINS%.txt}_origin.txt${N}"
 [ -f "${DOMAINS%.txt}_cdn_tls.txt" ]    && echo -e "   - CDN+TLS+prt: ${C}${DOMAINS%.txt}_cdn_tls.txt${N}"
-cp -r "$RESULT" /sdcard/Download/ 2>/dev/null && \
-  echo -e " Disalin juga ke: ${C}/sdcard/Download/$NAME/${N}"
+mkdir -p /sdcard/sttxstore 2>/dev/null
+cp -r "$RESULT" /sdcard/sttxstore/ 2>/dev/null && \
+  echo -e " Disalin juga ke: ${C}/sdcard/sttxstore/$NAME/${N}"

@@ -35,7 +35,7 @@ pick_file() {
   local -a files=(); local -a uniq=()
   local d f ext
 
-  for d in "/sdcard/Download" "$PWD" "$HOME" "/sdcard"; do
+  for d in "/sdcard/Download" "/sdcard/sttxstore" "$PWD" "$HOME" "$HOME/domainfinder" "/sdcard"; do
     [ -d "$d" ] || continue
     while IFS= read -r f; do
       ext="$(echo "${f##*.}" | tr 'A-Z' 'a-z')"
@@ -229,7 +229,7 @@ show_help() {
   echo -e "${Y}Alur umum yang disarankan:${N}"
   echo -e "  - Punya APK? -> menu ${C}6 (Smart Scan)${N}, pilih file APK-nya. Beres semua."
   echo -e "  - Mau cek CDN + TLS daftar domain? -> menu ${C}4${N}."
-  echo -e "  - Hasil tersimpan di: ${C}~/STT-results/<nama-app>/${N} & ${C}/sdcard/Download/${N}"
+  echo -e "  - Hasil tersimpan di: ${C}~/STT-results/<nama-app>/${N} & ${C}/sdcard/sttxstore/${N}"
   echo ""
   echo -e "${R}Catatan:${N} gunakan hanya untuk pengujian yang sah / perangkat & aplikasi milik sendiri."
   echo -e "${C}mod by xstorevpn${N}"

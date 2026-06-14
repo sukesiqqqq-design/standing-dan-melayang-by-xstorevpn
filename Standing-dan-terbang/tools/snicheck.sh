@@ -90,4 +90,5 @@ echo ""
 echo -e "${G}==================================================${N}"
 echo -e "${G} Selesai. Hasil tersimpan di:${N} $OUT"
 echo -e "${G}==================================================${N}"
-cp "$OUT" /sdcard/Download/ 2>/dev/null && echo -e "${C}[*] Disalin juga ke /sdcard/Download/${N}"
+mkdir -p /sdcard/sttxstore 2>/dev/null
+cp "$OUT" /sdcard/sttxstore/ 2>/dev/null && echo -e "${C}[*] Disalin juga ke /sdcard/sttxstore/${N}"

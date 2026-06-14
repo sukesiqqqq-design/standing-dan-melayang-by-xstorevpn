@@ -169,5 +169,6 @@ echo -e "  Port 80 open      : ${op80:-0}    Port 443 open : ${op443:-0}"
 echo -e "  Tabel CDN+TLS+port: $ALL"
 echo -e "${G}===================================================================================${N}"
 
-cp "$CF" "$CFRONT" "$ORIGIN" "$ALL" /sdcard/Download/ 2>/dev/null \
-  && echo -e "${C}[*] Hasil disalin juga ke /sdcard/Download/${N}"
+mkdir -p /sdcard/sttxstore 2>/dev/null
+cp "$CF" "$CFRONT" "$ORIGIN" "$ALL" /sdcard/sttxstore/ 2>/dev/null \
+  && echo -e "${C}[*] Hasil disalin juga ke /sdcard/sttxstore/${N}"
