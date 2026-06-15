@@ -67,7 +67,9 @@ if command -v apktool >/dev/null 2>&1; then
     echo -e "${Y}[!] apktool dilewati (gagal/timeout) - lanjut pakai sumber lain${N}"
   fi
 else
-  echo -e "${Y}[!] apktool tidak ada - lewati decode resource (pasang: bash install.sh)${N}"
+  echo -e "${Y}[!] apktool tidak ada - decode resource dilewati.${N}"
+  echo -e "${Y}    (Domain di XML/arsc tetap dijaring via 'strings'. Untuk hasil maksimal${N}"
+  echo -e "${Y}     pasang apktool: bash ~/standing-dan-melayang-by-xstorevpn/Standing-dan-terbang/install.sh)${N}"
 fi
 
 URLS="$OUTDIR/${NAME}_urls.txt"
@@ -92,11 +94,15 @@ for d in "${SCAN_DIRS[@]}"; do
   grep -raohE "$HOST_RE"        "$d" 2>/dev/null >> "$RAW"
 done
 
-# --- 6b. strings pada file biner (dex/so/arsc) -> domain yang di-embed di kode ---
+# --- 6b. strings pada file biner -> domain yang di-embed di kode/resource ---
+#  PENTING: AndroidManifest.xml & res/xml/*.xml di APK berformat BINER (AXML),
+#  begitu juga resources.arsc. 'strings' menambang string pool-nya sehingga
+#  domain di network_security_config / strings.xml tetap terjaring WALAU
+#  apktool tidak terpasang.
 if command -v strings >/dev/null 2>&1; then
-  echo -e "${C}[*] Menambang string dari biner (classes.dex, .so, resources.arsc)...${N}"
+  echo -e "${C}[*] Menambang string dari biner (dex, .so, .arsc, XML biner)...${N}"
   STRTMP="$WORKDIR/_strings.txt"; : > "$STRTMP"
-  find "${SCAN_DIRS[@]}" -type f \( -name '*.dex' -o -name '*.so' -o -name '*.arsc' \) 2>/dev/null \
+  find "${SCAN_DIRS[@]}" -type f \( -name '*.dex' -o -name '*.so' -o -name '*.arsc' -o -name '*.xml' \) 2>/dev/null \
     | while IFS= read -r f; do strings -n 6 "$f" 2>/dev/null; done >> "$STRTMP"
   grep -aohE "$URL_RE"         "$STRTMP" 2>/dev/null >> "$URLS"
   grep -aohE "$SCHEME_HOST_RE" "$STRTMP" 2>/dev/null | sed -E 's#^[a-z]+://##' >> "$RAW"
