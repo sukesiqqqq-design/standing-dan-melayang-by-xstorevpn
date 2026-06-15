@@ -81,33 +81,33 @@ RAW="$WORKDIR/_raw_hosts.txt"
 SCAN_DIRS=("$EXTRACT")
 [ -d "$DECODED" ] && SCAN_DIRS+=("$DECODED")
 
-# Regex (label dibatasi {0,61} -> hindari backtracking lambat pada data biner)
+# Regex
 URL_RE='https?://[a-zA-Z0-9._~:/?#@!&=+,;%-]+'
 SCHEME_HOST_RE='(https?|wss?|ftp)://[a-zA-Z0-9.-]+'
-HOST_RE='([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}'
+HOST_RE='\b([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}\b'
 
-# --- 6a. Baca SEMUA file SEKALI via 'strings' -> kumpulan teks (CORPUS) ---
-#  Jauh lebih cepat daripada grep berulang di atas file biner besar (multidex/.so).
-#  'strings' juga menambang string pool dari dex/.so/.arsc/AXML biner.
-CORPUS="$WORKDIR/_corpus.txt"; : > "$CORPUS"
-echo -e "${C}[*] Membaca isi file (strings, sekali jalan)...${N}"
+# --- 6a. Kumpulkan dari file hasil unzip + decode ---
+echo -e "${C}[*] Mengumpulkan URL + domain/host (unzip + apktool)...${N}"
+for d in "${SCAN_DIRS[@]}"; do
+  grep -raohE "$URL_RE"         "$d" 2>/dev/null >> "$URLS"
+  grep -raohE "$SCHEME_HOST_RE" "$d" 2>/dev/null | sed -E 's#^[a-z]+://##' >> "$RAW"
+  grep -raohE "$HOST_RE"        "$d" 2>/dev/null >> "$RAW"
+done
+
+# --- 6b. strings pada file biner -> domain yang di-embed di kode/resource ---
+#  PENTING: AndroidManifest.xml & res/xml/*.xml di APK berformat BINER (AXML),
+#  begitu juga resources.arsc. 'strings' menambang string pool-nya sehingga
+#  domain di network_security_config / strings.xml tetap terjaring WALAU
+#  apktool tidak terpasang.
 if command -v strings >/dev/null 2>&1; then
-  find "${SCAN_DIRS[@]}" -type f \
-       ! -name '*.png' ! -name '*.jpg' ! -name '*.jpeg' ! -name '*.webp' \
-       ! -name '*.gif' ! -name '*.ttf' ! -name '*.otf' ! -name '*.mp3' \
-       ! -name '*.mp4' ! -name '*.ogg' ! -name '*.woff*' -print0 2>/dev/null \
-    | xargs -0 -r strings -n 4 2>/dev/null > "$CORPUS"
+  echo -e "${C}[*] Menambang string dari biner (dex, .so, .arsc, XML biner)...${N}"
+  STRTMP="$WORKDIR/_strings.txt"; : > "$STRTMP"
+  find "${SCAN_DIRS[@]}" -type f \( -name '*.dex' -o -name '*.so' -o -name '*.arsc' -o -name '*.xml' \) 2>/dev/null \
+    | while IFS= read -r f; do strings -n 6 "$f" 2>/dev/null; done >> "$STRTMP"
+  grep -aohE "$URL_RE"         "$STRTMP" 2>/dev/null >> "$URLS"
+  grep -aohE "$SCHEME_HOST_RE" "$STRTMP" 2>/dev/null | sed -E 's#^[a-z]+://##' >> "$RAW"
+  grep -aohE "$HOST_RE"        "$STRTMP" 2>/dev/null >> "$RAW"
 fi
-# Fallback bila strings tidak ada / hasil kosong: baca langsung
-[ -s "$CORPUS" ] || find "${SCAN_DIRS[@]}" -type f -print0 2>/dev/null | xargs -0 -r cat 2>/dev/null > "$CORPUS"
-
-# --- 6b. Ekstrak URL + domain/host dari CORPUS (grep di teks = cepat) ---
-echo -e "${C}[*] Mengekstrak URL + domain/host...${N}"
-LC_ALL=C grep -aoE "$URL_RE" "$CORPUS" 2>/dev/null | sort -u > "$URLS"
-{
-  LC_ALL=C grep -aoE "$SCHEME_HOST_RE" "$CORPUS" 2>/dev/null | sed -E 's#^[A-Za-z]+://##'
-  LC_ALL=C grep -aoE "$HOST_RE"        "$CORPUS" 2>/dev/null
-} > "$RAW"
 
 # --- 6c. Filter pintar -> domain valid, buang nama package Java ---
 echo -e "${C}[*] Memfilter (buang nama package, simpan domain asli)...${N}"
@@ -116,8 +116,7 @@ TLD='com|net|org|io|id|co|app|info|biz|tv|me|cloud|dev|xyz|asia|site|online|gov|
 
 LC_ALL=C tr 'A-Z' 'a-z' < "$RAW" \
   | sed -E 's/[.]+$//; s/^[.]+//' \
-  | grep -E "^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+($TLD)\$" \
-  | awk -F. '(length($(NF-1)) >= 2 && $(NF-1) ~ /[a-z]/)' \
+  | grep -E "^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+($TLD)\$" \
   | grep -vE '^(com|org|net|io|java|javax|kotlin|kotlinx|android|androidx|dalvik|sun|jdk|junit|okhttp3|okio|retrofit2|rx|reactivex|gms|google|firebase|crashlytics|annotation|internal|graphics|widget|util|layout|material|drawable|databinding|coroutines|dagger|hilt|aspectj|objectweb|xmlpull|fasterxml|bytebuddy|jetbrains|intellij|squareup|bumptech)\.' \
   | grep -vE '\.(internal|preferences|prototype|bytelength|tenant|databinding|companion|impl|buildconfig|config|serializer|advertising|installation|provider|receiver|service|activity|fragment|adapter|viewmodel|listener|callback|exception|factory|builder|manager|helper|module|component)$' \
   | sort -u > "$DOMAINS"
@@ -125,9 +124,6 @@ LC_ALL=C tr 'A-Z' 'a-z' < "$RAW" \
 COUNT="$(wc -l < "$DOMAINS" | tr -d ' ')"
 sort -u -o "$URLS" "$URLS"
 UCOUNT="$(wc -l < "$URLS" | tr -d ' ')"
-
-# Bersihkan file sementara besar (corpus/raw) supaya tidak makan storage
-rm -f "$CORPUS" "$RAW" 2>/dev/null
 
 # --- 7. Tampilkan & salin hasil ---
 echo ""
