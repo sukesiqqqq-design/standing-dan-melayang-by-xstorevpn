@@ -14,7 +14,7 @@ Kumpulan tool **analisis jaringan, host/SNI, dan APK** dalam satu paket — dibu
 |------|--------|--------|
 | **BugScanX** | All-in-one pencari SNI bug host (scanner, subdomain, reverse IP, port, SSL/DNS) | [FreeNetLabs/BugScanX](https://github.com/FreeNetLabs/BugScanX) |
 | **ApkPatcher** | Patch APK (SSL bypass, merge split APK, dll) | [TechnoIndian/ApkPatcher](https://github.com/TechnoIndian/ApkPatcher) |
-| **domainfinder** *(lokal)* | Ekstrak domain & host/SNI dari APK/APKS/XAPK/APKM — **ekstraksi dalam: unzip + apktool decode resource + mining string biner (.dex/.so/.arsc)** untuk hasil maksimal | toolkit ini |
+| **domainfinder** *(lokal)* | Ekstrak domain & host/SNI dari APK/APKS/XAPK/APKM (unzip + grep, cepat & ringan) | toolkit ini |
 | **cdncheck** *(lokal)* | Deteksi CDN (Cloudflare / CloudFront) **+ versi TLS + cek port 80/443**, scan paralel | toolkit ini |
 | **snicheck** *(lokal)* | Inspeksi TLS/SNI handshake + detail sertifikat (CN, SAN, issuer, expiry) — opsional | toolkit ini |
 | **smartscan** *(lokal)* | Orchestrator: APK → domain → CDN+TLS, sekali jalan + laporan terpadu | toolkit ini |
