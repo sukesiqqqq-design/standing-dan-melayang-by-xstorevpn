@@ -23,7 +23,7 @@ pip install --force-reinstall https://github.com/TechnoIndian/ApkPatcher/archive
 
 step "Refresh symlink tool lokal"
 PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
-for t in domainfinder cdncheck snicheck smartscan; do
+for t in domainfinder cdncheck snicheck smartscan reverseip; do
   [ -f "$TOOLKIT_DIR/tools/$t.sh" ] && { chmod +x "$TOOLKIT_DIR/tools/$t.sh"; ln -sf "$TOOLKIT_DIR/tools/$t.sh" "$PREFIX/bin/$t"; }
 done
 [ -f "$TOOLKIT_DIR/menu.sh" ] && { chmod +x "$TOOLKIT_DIR/menu.sh"; ln -sf "$TOOLKIT_DIR/menu.sh" "$PREFIX/bin/stt"; }

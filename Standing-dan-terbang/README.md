@@ -18,6 +18,7 @@ Kumpulan tool **analisis jaringan, host/SNI, dan APK** dalam satu paket — dibu
 | **cdncheck** *(lokal)* | Deteksi CDN (Cloudflare / CloudFront) **+ versi TLS + cek port 80/443**, scan paralel | toolkit ini |
 | **snicheck** *(lokal)* | Inspeksi TLS/SNI handshake + detail sertifikat (CN, SAN, issuer, expiry) — opsional | toolkit ini |
 | **smartscan** *(lokal)* | Orchestrator: APK → domain → CDN+TLS, sekali jalan + laporan terpadu | toolkit ini |
+| **reverseip** *(lokal)* | Reverse IP lookup: input domain/IP → cari semua host lain di IP/server yang sama (HackerTarget + fallback RapidDNS) | toolkit ini |
 
 ---
 
@@ -67,10 +68,11 @@ stt
 Daftar menu:
 ```
  1) BugScanX         6) Smart Scan (analisis lengkap 1x)
- 2) ApkPatcher       7) Update semua tool
- 3) Domain Finder    8) Cek status / versi
- 4) CDN+TLS+Port      9) Uninstall toolkit
- 5) SNI/TLS Detail  10) Bantuan / Penjelasan
+ 2) ApkPatcher       7) Reverse IP (cari host lain di IP sama)
+ 3) Domain Finder    8) Update semua tool
+ 4) CDN+TLS+Port      9) Cek status / versi
+ 5) SNI/TLS Detail  10) Uninstall toolkit
+                    11) Bantuan / Penjelasan
 ```
 
 ### Lewat perintah langsung
@@ -87,6 +89,9 @@ Daftar menu:
 | `snicheck host.com` | Detail sertifikat TLS/SNI 1 host (opsional) |
 | `snicheck domains.txt 443` | Detail sertifikat banyak host (port opsional) |
 | `smartscan app.apks` | **Analisis lengkap sekali jalan** |
+| `reverseip example.com` | Cari semua host lain di IP yang sama (resolve domain → IP dulu) |
+| `reverseip 1.2.3.4` | Reverse IP langsung dari sebuah IP |
+| `reverseip targets.txt` | Reverse IP banyak domain/IP sekaligus (1 per baris) |
 
 ---
 
@@ -171,7 +176,8 @@ standing-dan-melayang-by-xstorevpn/
     │   ├── domainfinder.sh   # ekstrak domain/host dari APK
     │   ├── cdncheck.sh       # deteksi Cloudflare / CloudFront
     │   ├── snicheck.sh       # inspeksi TLS/SNI & sertifikat
-    │   └── smartscan.sh      # orchestrator analisis lengkap
+    │   ├── smartscan.sh      # orchestrator analisis lengkap
+    │   └── reverseip.sh      # reverse IP lookup (cari host satu server)
     ├── wordlists/
     │   └── subdomains.txt    # ~200 subdomain umum untuk enumerasi
     └── README.md
