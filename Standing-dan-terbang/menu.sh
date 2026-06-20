@@ -85,12 +85,13 @@ menu() {
   echo -e "  ${C} 4)${N} CDN+TLS+Port     - CDN, versi TLS & port 80/443 $(status cdncheck)"
   echo -e "  ${C} 5)${N} SNI/TLS Detail   - Detail handshake & sertifikat $(status snicheck)"
   echo -e "  ${C} 6)${N} ${B}Smart Scan${N}      - Analisis lengkap 1x klik  $(status smartscan)"
+  echo -e "  ${C} 7)${N} Reverse IP       - Cari host lain di IP yang sama $(status reverseip)"
   echo -e "${M}--------------------------------------------------------${N}"
-  echo -e "  ${C} 7)${N} Update semua tool        ${C} 8)${N} Cek status/versi"
-  echo -e "  ${C} 9)${N} Uninstall toolkit        ${C}10)${N} ${Y}Bantuan / Penjelasan${N}"
+  echo -e "  ${C} 8)${N} Update semua tool        ${C} 9)${N} Cek status/versi"
+  echo -e "  ${C}10)${N} Uninstall toolkit        ${C}11)${N} ${Y}Bantuan / Penjelasan${N}"
   echo -e "  ${C} 0)${N} Keluar"
   echo -e "${M}--------------------------------------------------------${N}"
-  read -rp "$(echo -e "${Y}Pilih menu [0-10]:${N} ")" pick
+  read -rp "$(echo -e "${Y}Pilih menu [0-11]:${N} ")" pick
 }
 
 # ---------------------------------------------------------------------
@@ -188,6 +189,24 @@ run_smartscan() {
   pause
 }
 
+run_reverseip() {
+  command -v reverseip >/dev/null 2>&1 || { echo -e "${R}reverseip belum terpasang.${N}"; pause; return; }
+  header
+  echo -e "${B}Reverse IP - cari host lain di IP/server yang sama${N}"
+  echo -e "  ${C}1)${N} Satu domain/IP (ketik manual)"
+  echo -e "  ${C}2)${N} Banyak domain/IP (dari file .txt)"
+  echo -e "  ${C}0)${N} Batal"
+  read -rp "$(echo -e "${Y}Pilih:${N} ")" m
+  case "$m" in
+    1) read -rp "Domain atau IP (mis: example.com / 1.2.3.4): " t
+       [ -n "$t" ] && reverseip "$t" ;;
+    2) pick_file "Pilih file domain/IP (.txt):" "txt" || { pause; return; }
+       reverseip "$PICKED" ;;
+    *) return ;;
+  esac
+  pause
+}
+
 update_all() {
   if [ -f "$TOOLKIT_DIR/update.sh" ]; then bash "$TOOLKIT_DIR/update.sh"
   else
@@ -212,6 +231,7 @@ show_status() {
   echo -e "cdncheck        : $(status cdncheck)"
   echo -e "snicheck        : $(status snicheck)"
   echo -e "smartscan       : $(status smartscan)"
+  echo -e "reverseip       : $(status reverseip)"
   echo -e "openssl         : $(command -v openssl >/dev/null 2>&1 && echo -e "${G}OK${N}" || echo -e "${R}belum${N}")"
   pause
 }
@@ -225,6 +245,7 @@ show_help() {
   echo -e "${C}4) CDN+TLS+Port${N}    : cek CDN (Cloudflare/CloudFront), ${B}versi TLS${N}, ${B}& port 80/443${N} sekaligus (paralel)."
   echo -e "${C}5) SNI/TLS Detail${N}  : detail lengkap sertifikat (CN/SAN/issuer/expiry) - opsional."
   echo -e "${C}6) Smart Scan${N}      : jalankan 3 -> 4 otomatis, hasil terkumpul 1 folder."
+  echo -e "${C}7) Reverse IP${N}      : input domain/IP -> cari semua host lain di IP yang sama (perbanyak daftar host)."
   echo ""
   echo -e "${Y}Alur umum yang disarankan:${N}"
   echo -e "  - Punya APK? -> menu ${C}6 (Smart Scan)${N}, pilih file APK-nya. Beres semua."
@@ -246,10 +267,11 @@ while true; do
     4) run_cdncheck ;;
     5) run_snicheck ;;
     6) run_smartscan ;;
-    7) update_all ;;
-    8) show_status ;;
-    9) run_uninstall ;;
-    10) show_help ;;
+    7) run_reverseip ;;
+    8) update_all ;;
+    9) show_status ;;
+    10) run_uninstall ;;
+    11) show_help ;;
     0) echo -e "${G}Sampai jumpa!${N}"; exit 0 ;;
     *) echo -e "${R}Pilihan tidak valid.${N}"; sleep 1 ;;
   esac
