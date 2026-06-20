@@ -8,7 +8,12 @@ TOOLKIT_DIR="$(cd "$(dirname "$0")" && pwd)"
 step() { echo -e "\n${B}==>${N} ${C}$*${N}"; }
 
 step "Update repo toolkit (git pull)"
-[ -d "$TOOLKIT_DIR/.git" ] && git -C "$TOOLKIT_DIR" pull --ff-only
+GIT_ROOT="$(git -C "$TOOLKIT_DIR" rev-parse --show-toplevel 2>/dev/null)"
+if [ -n "$GIT_ROOT" ]; then
+  git -C "$GIT_ROOT" pull --ff-only || echo -e "${Y}[!] git pull dilewati (cek koneksi / branch).${N}"
+else
+  echo -e "${Y}[!] Bukan repo git, lewati git pull.${N}"
+fi
 
 step "Update BugScanX"
 pip install --upgrade bugscan-x
