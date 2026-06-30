@@ -148,7 +148,7 @@ retry 2 python -m pip install --force-reinstall --no-cache-dir \
 # --- 7. Tool lokal: domainfinder, cdncheck, snicheck, smartscan -----
 step "Memasang tool lokal (domainfinder, cdncheck, snicheck, smartscan, reverseip)"
 mkdir -p "$BIN"
-for t in domainfinder cdncheck snicheck smartscan reverseip; do
+for t in domainfinder cdncheck snicheck smartscan reverseip ciphercheck; do
   if [ -f "$TOOLKIT_DIR/tools/$t.sh" ]; then
     chmod +x "$TOOLKIT_DIR/tools/$t.sh"
     ln -sf "$TOOLKIT_DIR/tools/$t.sh" "$BIN/$t"
@@ -182,7 +182,7 @@ fi
 echo -e "${G}=====================================================${N}"
 echo -e " Jalankan menu:        ${C}stt${N}"
 echo -e " Smart scan (1x):      ${C}smartscan <file.apk|apks>${N}"
-echo -e " Atau tiap tool:       ${C}bugscanx${N} | ${C}ApkPatcher -h${N} | ${C}domainfinder${N} | ${C}cdncheck${N} | ${C}snicheck${N} | ${C}reverseip${N}"
+echo -e " Atau tiap tool:       ${C}bugscanx${N} | ${C}ApkPatcher -h${N} | ${C}domainfinder${N} | ${C}cdncheck${N} | ${C}snicheck${N} | ${C}reverseip${N} | ${C}ciphercheck${N}"
 
 if [ -n "$FAILED" ]; then
   echo ""

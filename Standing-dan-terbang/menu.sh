@@ -86,12 +86,13 @@ menu() {
   echo -e "  ${C} 5)${N} SNI/TLS Detail   - Detail handshake & sertifikat $(status snicheck)"
   echo -e "  ${C} 6)${N} ${B}Smart Scan${N}      - Analisis lengkap 1x klik  $(status smartscan)"
   echo -e "  ${C} 7)${N} Reverse IP       - Cari host lain di IP yang sama $(status reverseip)"
+  echo -e "  ${C} 8)${N} Cek Cipher Lengkap - Deteksi Cipher Suite dsb     $(status ciphercheck)"
   echo -e "${M}--------------------------------------------------------${N}"
-  echo -e "  ${C} 8)${N} Update semua tool        ${C} 9)${N} Cek status/versi"
-  echo -e "  ${C}10)${N} Uninstall toolkit        ${C}11)${N} ${Y}Bantuan / Penjelasan${N}"
+  echo -e "  ${C} 9)${N} Update semua tool        ${C}10)${N} Cek status/versi"
+  echo -e "  ${C}11)${N} Uninstall toolkit        ${C}12)${N} ${Y}Bantuan / Penjelasan${N}"
   echo -e "  ${C} 0)${N} Keluar"
   echo -e "${M}--------------------------------------------------------${N}"
-  read -rp "$(echo -e "${Y}Pilih menu [0-11]:${N} ")" pick
+  read -rp "$(echo -e "${Y}Pilih menu [0-12]:${N} ")" pick
 }
 
 # ---------------------------------------------------------------------
@@ -207,6 +208,15 @@ run_reverseip() {
   pause
 }
 
+
+run_ciphercheck() {
+  command -v ciphercheck >/dev/null 2>&1 || { echo -e "${R}ciphercheck belum terpasang.${N}"; pause; return; }
+  pick_file "Pilih file domains (.txt):" "txt" || { pause; return; }
+  read -rp "Jumlah scan paralel (kosong=3): " j
+  ciphercheck "$PICKED" "${j:-3}"
+  pause
+}
+
 update_all() {
   if [ -f "$TOOLKIT_DIR/update.sh" ]; then bash "$TOOLKIT_DIR/update.sh"
   else
@@ -232,6 +242,7 @@ show_status() {
   echo -e "snicheck        : $(status snicheck)"
   echo -e "smartscan       : $(status smartscan)"
   echo -e "reverseip       : $(status reverseip)"
+  echo -e "ciphercheck     : $(status ciphercheck)"
   echo -e "openssl         : $(command -v openssl >/dev/null 2>&1 && echo -e "${G}OK${N}" || echo -e "${R}belum${N}")"
   pause
 }
@@ -268,10 +279,11 @@ while true; do
     5) run_snicheck ;;
     6) run_smartscan ;;
     7) run_reverseip ;;
-    8) update_all ;;
-    9) show_status ;;
-    10) run_uninstall ;;
-    11) show_help ;;
+    8) run_ciphercheck ;;
+    9) update_all ;;
+    10) show_status ;;
+    11) run_uninstall ;;
+    12) show_help ;;
     0) echo -e "${G}Sampai jumpa!${N}"; exit 0 ;;
     *) echo -e "${R}Pilihan tidak valid.${N}"; sleep 1 ;;
   esac
